@@ -1,0 +1,4 @@
+{
+    // It's a liniting rules that unKnown rules will be ignored
+    "css.lint.unknownAtRules": "ignore"
+}

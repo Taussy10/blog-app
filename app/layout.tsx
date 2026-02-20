@@ -23,7 +23,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    // by doing website will be in dark mode
+    <html lang="en" className=" dark">
       <body
       suppressHydrationWarning={true}
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
