@@ -14,12 +14,7 @@ export default function Home() {
           priority
         />
         <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-         {/* The destructive variant already applies background styles.
-If we want to override them, we should either remove the variant
-or define a custom variant instead of using inline styles cause your custom-tailwind CSS won't work here */}
-        <Button className="bg-green-500" variant={'destructive'} style={{ backgroundColor:'orange'}} size={'default'} >Shadcn Button</Button>
-          <Button variant={'tausif'} size={'default'}> Tausif</Button>
-
+    
           <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
            Hello 
           </h1>
