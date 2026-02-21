@@ -27,8 +27,6 @@ export async function updateSession(request: NextRequest) {
     '/login',
     '/sign-up',
     '/sign-up-success',
-    '/forgot-password',
-    '/update-password',
     '/confirm',            // magic link confirm handler
     '/callback',           // Google OAuth callback
     '/error',
