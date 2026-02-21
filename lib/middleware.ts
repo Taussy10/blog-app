@@ -1,6 +1,5 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { createClient } from './server'
+import { createClient } from '@/lib/supabase/server'
 
 // It's route guard: It runs on every single request before any page loads.
 // It's used to protect routes and to redirect users to the login page if they are not authenticated.
