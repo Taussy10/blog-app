@@ -1,13 +1,17 @@
 'use client';
 
 import React, { useState } from "react";
-import Editor from "./editor-component";
+import dynamic from "next/dynamic";
+// In NextJS components are pre-rendered(firstly render on server) on the server where these globals(document, window) don't exist,
+// leading to that crash during the "module evaluation" phase.
+// now by ssr: false it won't render on the server
+const Editor = dynamic(() => import("./editor-component"), { ssr: false });
 import { PreviewRenderer } from "./preview-renderer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { OutputData } from "@editorjs/editorjs";
+import type { OutputData } from "@editorjs/editorjs";
 import { toast } from "sonner";
 import { Loader2, Save, Eye, ChevronLeft } from "lucide-react";
 
@@ -19,9 +23,9 @@ export function BlogEditor() {
     const [isSaving, setIsSaving] = useState(false);
     const [isPreview, setIsPreview] = useState(false);
 
-    
+
     const supabase = createClient();
-   const knowUser = async () => {
+    const knowUser = async () => {
         const { data: user } = await supabase.auth.getUser();
         console.log(user);
     }
@@ -36,15 +40,15 @@ export function BlogEditor() {
             // console.log("Saving...", data);
             // await new Promise(r => setTimeout(r, 1000));
             // toast.success("Blog saved (simulated)");
-             
+
             // Get current looged in user 
             const { data: user } = await supabase.auth.getUser();
-            if(!user.user) {
+            if (!user.user) {
                 toast.error("You are not logged in");
                 return;
             }
             // Insert blog in database
-             const { data: blog, error } = await supabase
+            const { data: blog, error } = await supabase
                 .from('blogs')
                 .insert({
                     title: title,
@@ -54,16 +58,17 @@ export function BlogEditor() {
                 .select()
                 .single();
             if (error) {
-                console.error("Supabase Error:", error);
                 toast.error(`Error: ${error.message}`);
+                console.error("Supabase Error:", error);
                 return;
             }
+            // data won't return 
             console.log("Blog saved successfully:", blog);
             toast.success("Blog saved to database!");
 
 
         } catch (e) {
-               console.error("System Error:", e);
+            console.error("System Error:", e);
             toast.error("An unexpected error occurred.");
         } finally {
             setIsSaving(false);

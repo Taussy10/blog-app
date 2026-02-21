@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from "react";
-import EditorJS, { OutputData } from "@editorjs/editorjs";
+import type EditorJS from "@editorjs/editorjs";
+import type { OutputData } from "@editorjs/editorjs";
 import { EDITOR_CONFIG } from "../../lib/editorjs.config";
 
 interface EditorProps {
@@ -22,6 +23,8 @@ const Editor: React.FC<EditorProps> = ({ data, onChange, holder }) => {
     if (!isMounted) return;
 
     const initEditor = async () => {
+      // type safety related
+      const EditorJS = (await import("@editorjs/editorjs")).default;
       if (!editorInstance.current) {
         const editor = new EditorJS({
           holder: holder,

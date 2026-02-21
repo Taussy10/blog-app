@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { OutputData } from '@editorjs/editorjs';
+import type { OutputData } from '@editorjs/editorjs';
 
 interface PreviewRendererProps {
     data: OutputData | undefined;
