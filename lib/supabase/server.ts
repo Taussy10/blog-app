@@ -1,10 +1,12 @@
 // What's this server.ts files in supabase ? for handline server side code
 // how to use it ? 
-
+// Supabase client for server
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
 export async function createClient() {
+    // server doesn't have access to browser-memeory aka localstorage
+    // so, it will red the cookies from the incoming http request 
     const cookieStore = await cookies()
 
     return createServerClient(
