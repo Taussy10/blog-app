@@ -1,6 +1,6 @@
-# Supabase Auth Setup Guide (Next.js SSR + PKCE)
+# Supabase Auth Setup Guide (Next.js SSR + PKCE - Passwordless)
 
-This guide outlines a professional authentication system using **Next.js**, **Supabase**, and `@supabase/ssr`. It implements a robust middleware guard, PKCE flow for OAuth/Magic Links, and a clean folder structure.
+This guide outlines a professional, **passwordless** authentication system using **Next.js**, **Supabase**, and `@supabase/ssr`. It implements a robust middleware guard, PKCE flow for OAuth/Magic Links, and a clean folder structure.
 
 ---
 
@@ -92,7 +92,8 @@ export async function updateSession(request: NextRequest) {
   const user = data?.claims
 
   // Define Public routes (No login needed)
-  const publicRoutes = ['/', '/login', '/sign-up', '/callback', '/confirm', '/error']
+  // Removed /sign-up and /forgot-password as we use passwordless auth
+  const publicRoutes = ['/', '/login', '/callback', '/confirm', '/error']
   
   const isPublicRoute = request.nextUrl.pathname === '/' || 
     publicRoutes.some(route => route !== '/' && request.nextUrl.pathname.startsWith(route))
@@ -152,14 +153,17 @@ export async function GET(request: NextRequest) {
 
 ## 5. UI Implementation logic
 
-- **Folder Groups**: Use `(auth)` for login/signup and `(protected)` for things like `/dashboard`. URLs will not include the parentheses.
+- **Folder Groups**: Use `(auth)` for login/callback and `(protected)` for things like `/dashboard`. URLs will not include the parentheses.
 - **Magic Links**: `emailRedirectTo` MUST point to `/callback` because `@supabase/ssr` uses PKCE (which sends a `?code=`).
-- **Logout**: Use `const supabase = createClient()` (from `lib/client.ts`) and call `await supabase.auth.signOut()`.
+- **Google Login**: Set `redirectTo` to point to `/callback?next=/dashboard`.
+- **Logout**: Use `const supabase = createClient()` (from `lib/supabase/client.ts`) and call `await supabase.auth.signOut()`.
+- **No Passwords**: Since we use Magic Links and Google OAuth, there is no need for Sign Up, Forgot Password, or Update Password pages.
 
 ---
 
 ## Summary of logic
 1. **Middleware** checks cookies on every request.
 2. If token is expired, `updateSession` refreshes it.
-3. **PKCE Flow** (Code Exchange) is used for security.
+3. **PKCE Flow** (Code Exchange) is used for security (Magic Links & OAuth).
 4. **Route Groups** keep organized but keep URLs clean.
+5. **Simplicity**: No passwords means a friction-less user experience.

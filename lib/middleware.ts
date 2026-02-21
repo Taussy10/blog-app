@@ -25,8 +25,6 @@ export async function updateSession(request: NextRequest) {
   const publicRoutes = [
     '/',                   // landing page (exact match)
     '/login',
-    '/sign-up',
-    '/sign-up-success',
     '/confirm',            // magic link confirm handler
     '/callback',           // Google OAuth callback
     '/error',
