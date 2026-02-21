@@ -91,37 +91,31 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims()
   const user = data?.claims
 
-  // Define Public routes (No login needed)
-  // Removed /sign-up and /forgot-password as we use passwordless auth
+  // These are the public routes that are accessible WITHOUT being logged in
   const publicRoutes = ['/', '/login', '/callback', '/confirm', '/error']
   
-  const isPublicRoute = request.nextUrl.pathname === '/' || 
-    publicRoutes.some(route => route !== '/' && request.nextUrl.pathname.startsWith(route))
+  // LOGIC: Check if current page is public
+  const isPublicRoute =
+    request.nextUrl.pathname === '/' ||   // Exact match for landing
+    publicRoutes.some(
+      (route) => route !== '/' && request.nextUrl.pathname.startsWith(route)
+    )
 
+  // 1. GUEST REDIRECT: If logged out and trying to touch private pages -> /login
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
+  // 2. AUTH REDIRECT: If logged in and trying to access landing/login -> /dashboard
+  if (user && (request.nextUrl.pathname === '/' || request.nextUrl.pathname === '/login')) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/dashboard'
+    return NextResponse.redirect(url)
+  }
+
   return supabaseResponse
-}
-```
-
-### `middleware.ts` (Root)
-Ensure it ignores static assets.
-```typescript
-import { type NextRequest } from 'next/server'
-import { updateSession } from '@/lib/middleware'
-
-export async function middleware(request: NextRequest) {
-  return await updateSession(request)
-}
-
-export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
 }
 ```
 
@@ -153,17 +147,22 @@ export async function GET(request: NextRequest) {
 
 ## 5. UI Implementation logic
 
-- **Folder Groups**: Use `(auth)` for login/callback and `(protected)` for things like `/dashboard`. URLs will not include the parentheses.
+- **Folder Groups**: Use `(auth)` for login/callback and `(protected)` for things like `/dashboard`.
 - **Magic Links**: `emailRedirectTo` MUST point to `/callback` because `@supabase/ssr` uses PKCE (which sends a `?code=`).
 - **Google Login**: Set `redirectTo` to point to `/callback?next=/dashboard`.
-- **Logout**: Use `const supabase = createClient()` (from `lib/supabase/client.ts`) and call `await supabase.auth.signOut()`.
-- **No Passwords**: Since we use Magic Links and Google OAuth, there is no need for Sign Up, Forgot Password, or Update Password pages.
+- **Logout**: Use `const supabase = createClient()` and call `await supabase.auth.signOut()`.
+- **No Passwords**: Since we use Magic Links and Google OAuth, there is no need for Sign Up or Forgot Password pages.
 
 ---
 
-## Summary of logic
-1. **Middleware** checks cookies on every request.
-2. If token is expired, `updateSession` refreshes it.
-3. **PKCE Flow** (Code Exchange) is used for security (Magic Links & OAuth).
-4. **Route Groups** keep organized but keep URLs clean.
-5. **Simplicity**: No passwords means a friction-less user experience.
+## Key Middleware Logic (Explained)
+- **`isPublicRoute` with `||`**: Works on a "Happy if any one says Yes" rule. If the first check (landing page) is true, it stops immediately.
+- **Why `route !== '/'` in loop?**: Because `startsWith('/')` matches every page on your site. We handle the landing page separately with an exact match to keep private pages safe.
+- **Specific Redirects**: We only redirect logged-in users from `/` and `/login`. We don't redirect them from `/error` or `/confirm` because they might still need to see those pages.
+
+---
+
+## Summary
+1. **Middleware** checks cookies and handles redirects on every request.
+2. **PKCE Flow** handles the secure exchange of codes for sessions.
+3. **Passwordless Strategy** removes the friction of passwords and the need for reset-password flows.
