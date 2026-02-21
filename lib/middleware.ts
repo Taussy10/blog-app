@@ -20,7 +20,7 @@ export async function updateSession(request: NextRequest) {
   const { data } = await (await supabase).auth.getClaims()
   const user = data?.claims
 
-  // Define public routes — accessible WITHOUT being logged in
+  // These are the public routes that are accessible WITHOUT being logged in
   const publicRoutes = [
     '/',                   // landing page (exact match)
     '/login',
@@ -29,18 +29,41 @@ export async function updateSession(request: NextRequest) {
     '/error',
   ]
 
+  // A variable that checks if the current pathname is a public route
   const isPublicRoute =
+  // if the pathname is exactly '/' or if those publicRoutes(not including '/') are starting with the current pathname
+  // then it will return true
+  // why does that variable will return true ? cause of || or operator
+
+  // why does not operator for "/"? cause we are using some method and startswith method
+  //startsWith('/') matches everything /login, /dashboard etc
+  // so, we have to stop it that's why used !== '/'
+  // and handled it separately in or operator 
+
+  // learn how does || operator works: "Happy if any one says Yes" rule.
+  // if first say True then it will return true 
+  // if first say fals then check second if it say true then return true
+  // if both say false then return false
+
     request.nextUrl.pathname === '/' ||   // exact match for landing page
     publicRoutes.some(
       (route) => route !== '/' && request.nextUrl.pathname.startsWith(route)
     )
 
+  // for logged-out user if he is logged-out then and on those pages then move to /login page
   if (!user && !isPublicRoute) {
     // then redirect to login page
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
+
+  // If user IS logged in and trying to access landing page or login, send to dashboard
+if (user && (request.nextUrl.pathname === '/' || request.nextUrl.pathname === '/login')) {
+  const url = request.nextUrl.clone()
+  url.pathname = '/dashboard'
+  return NextResponse.redirect(url)
+}
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:
