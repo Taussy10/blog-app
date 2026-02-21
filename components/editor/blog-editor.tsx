@@ -11,24 +11,60 @@ import { OutputData } from "@editorjs/editorjs";
 import { toast } from "sonner";
 import { Loader2, Save, Eye, ChevronLeft } from "lucide-react";
 
+// have to use client cause editor.js is client side lib
+import { createClient } from "@/lib/supabase/client";
 export function BlogEditor() {
     const [title, setTitle] = useState("");
     const [data, setData] = useState<OutputData | undefined>(undefined);
     const [isSaving, setIsSaving] = useState(false);
     const [isPreview, setIsPreview] = useState(false);
 
+    
+    const supabase = createClient();
+   const knowUser = async () => {
+        const { data: user } = await supabase.auth.getUser();
+        console.log(user);
+    }
     const handleSave = async () => {
         // ... same saving logic ...
         if (!title) { toast.error("Please enter a title"); return; }
         if (!data || data.blocks.length === 0) { toast.error("Content empty"); return; }
 
         setIsSaving(true);
+        // not every time it should create a new client that's why out of the handler
         try {
-            console.log("Saving...", data);
-            await new Promise(r => setTimeout(r, 1000));
-            toast.success("Blog saved (simulated)");
+            // console.log("Saving...", data);
+            // await new Promise(r => setTimeout(r, 1000));
+            // toast.success("Blog saved (simulated)");
+             
+            // Get current looged in user 
+            const { data: user } = await supabase.auth.getUser();
+            if(!user.user) {
+                toast.error("You are not logged in");
+                return;
+            }
+            // Insert blog in database
+             const { data: blog, error } = await supabase
+                .from('blogs')
+                .insert({
+                    title: title,
+                    content: data, // Note: Images will stay as Blobs until you add Storage logic
+                    user_id: user.user.id // Pass the user ID explicitly
+                })
+                .select()
+                .single();
+            if (error) {
+                console.error("Supabase Error:", error);
+                toast.error(`Error: ${error.message}`);
+                return;
+            }
+            console.log("Blog saved successfully:", blog);
+            toast.success("Blog saved to database!");
+
+
         } catch (e) {
-            toast.error("Save failed");
+               console.error("System Error:", e);
+            toast.error("An unexpected error occurred.");
         } finally {
             setIsSaving(false);
         }
@@ -116,12 +152,6 @@ export function BlogEditor() {
                     </div>
                 </div>
             )}
-
-            <footer className="pt-20 pb-10 flex flex-col items-center gap-4 border-t opacity-50">
-                <p className="text-xs font-mono lowercase tracking-tighter">
-                    Powered by Editor.js • Next.js • Supabase
-                </p>
-            </footer>
         </div>
     );
 }
