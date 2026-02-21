@@ -3,6 +3,7 @@ import { type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/middleware'
 
 // Acts as a bridge that connects Next.js's middleware system to your auth logic in middlware.ts
+// In hindi: iska ka kaam run kran middlware ko 
 async function proxy(request: NextRequest) {
   return await updateSession(request)
 }
