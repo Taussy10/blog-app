@@ -118,12 +118,12 @@ export function BlogEditor() {
                         <PreviewRenderer data={data} />
                     </div>
 
-                    <div className="mt-16 p-8 bg-muted/50 rounded-2xl border-2 border-dashed border-primary/20">
+                    {/* <div className="mt-16 p-8 bg-muted/50 rounded-2xl border-2 border-dashed border-primary/20">
                         <h4 className="text-sm font-bold uppercase tracking-widest text-primary mb-4">Under the hood (JSON)</h4>
                         <pre className="text-xs font-mono bg-black text-green-400 p-4 rounded-xl overflow-auto max-h-[300px] shadow-2xl">
                             {JSON.stringify(data, null, 2)}
                         </pre>
-                    </div>
+                    </div> */}
                 </div>
             ) : (
                 <div className="space-y-8 animate-in fade-in duration-500">

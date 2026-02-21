@@ -59,6 +59,8 @@ export async function updateSession(request: NextRequest) {
   }
 
   // If user IS logged in and trying to access landing page or login, send to dashboard
+  // can't we do user && isPublicRoute ? Naah, let's say user goes to /confirm or /error page then it will redirect to dashboard
+  // even though user is not login
 if (user && (request.nextUrl.pathname === '/' || request.nextUrl.pathname === '/login')) {
   const url = request.nextUrl.clone()
   url.pathname = '/dashboard'
