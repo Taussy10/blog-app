@@ -15,7 +15,7 @@ export default async function ProtectedPage() {
   return (
     <main className="min-h-screen bg-muted/30">
       <BlogEditor />
-      {/* <LogoutButton/> */}
+      <LogoutButton/>
     </main>
   );
 }
