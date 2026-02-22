@@ -22,7 +22,7 @@ export function BlogEditor() {
     const [data, setData] = useState<OutputData | undefined>(undefined);
     const [isSaving, setIsSaving] = useState(false);
     const [isPreview, setIsPreview] = useState(false);
-
+    const [blogId, setBlogId] = useState<string | null>(null);
 
     const supabase = createClient();
     const knowUser = async () => {
@@ -30,42 +30,42 @@ export function BlogEditor() {
         console.log(user);
     }
     const handleSave = async () => {
-        // ... same saving logic ...
         if (!title) { toast.error("Please enter a title"); return; }
         if (!data || data.blocks.length === 0) { toast.error("Content empty"); return; }
 
         setIsSaving(true);
-        // not every time it should create a new client that's why out of the handler
         try {
-            // console.log("Saving...", data);
-            // await new Promise(r => setTimeout(r, 1000));
-            // toast.success("Blog saved (simulated)");
-
-            // Get current looged in user 
-            const { data: user } = await supabase.auth.getUser();
-            if (!user.user) {
+            // Get current logged in user 
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            if (userError || !user) {
                 toast.error("You are not logged in");
                 return;
             }
-            // Insert blog in database
+
+            // UPSERT logic: If blogId exists, it updates. If not, it inserts.
             const { data: blog, error } = await supabase
                 .from('blogs')
-                .insert({
+                .upsert({
+                    blog_id: blogId || undefined, // Use blog_id as the primary key name
                     title: title,
-                    content: data, // Note: Images will stay as Blobs until you add Storage logic
-                    user_id: user.user.id // Pass the user ID explicitly
+                    content: data,
+                    user_id: user.id
                 })
                 .select()
                 .single();
+
             if (error) {
                 toast.error(`Error: ${error.message}`);
                 console.error("Supabase Error:", error);
                 return;
             }
-            // data won't return 
-            console.log("Blog saved successfully:", blog);
-            toast.success("Blog saved to database!");
 
+            // Update state with the saved blog ID so next save is an update
+            if (blog) {
+                setBlogId(blog.blog_id); // Use blog_id from the returned data
+                console.log("Blog saved/updated successfully:", blog);
+                toast.success(blogId ? "Blog updated!" : "Blog created!");
+            }
 
         } catch (e) {
             console.error("System Error:", e);
