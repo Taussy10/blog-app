@@ -23,6 +23,7 @@ export function BlogEditor() {
     const [isSaving, setIsSaving] = useState(false);
     const [isPreview, setIsPreview] = useState(false);
     const [blogId, setBlogId] = useState<string | null>(null);
+    const [accessType, setAccessType] = useState<"free" | "paid">("free");
 
     const supabase = createClient();
     const knowUser = async () => {
@@ -42,14 +43,15 @@ export function BlogEditor() {
                 return;
             }
 
-            // UPSERT logic: If blogId exists, it updates. If not, it inserts.
+            // What does UPSERT do? If blogId exists, it updates. If not, it inserts based on primary-key/unique -> blog_id
             const { data: blog, error } = await supabase
                 .from('blogs')
                 .upsert({
                     blog_id: blogId || undefined, // Use blog_id as the primary key name
                     title: title,
                     content: data,
-                    user_id: user.id
+                    user_id: user.id,
+                    access_type: accessType,
                 })
                 .select()
                 .single();
@@ -141,6 +143,35 @@ export function BlogEditor() {
                                     onChange={(e) => setTitle(e.target.value)}
                                     className="text-xl font-bold py-8 px-6 bg-background/50 border-2 focus-visible:ring-primary shadow-inner"
                                 />
+                            </div>
+
+                            <div className="space-y-3">
+                                <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Access Level</Label>
+                                <div className="flex bg-muted/30 p-1.5 rounded-2xl border-2 border-primary/5 w-full sm:w-fit backdrop-blur-sm">
+                                    <button
+                                        type="button"
+                                        onClick={() => setAccessType('free')}
+                                        className={`flex-1 sm:flex-none px-10 py-2.5 rounded-xl text-sm font-black transition-all duration-300 ${accessType === 'free'
+                                                ? 'bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] text-primary scale-100'
+                                                : 'text-muted-foreground/60 hover:text-foreground hover:bg-background/40 scale-95'
+                                            }`}
+                                    >
+                                        FREE
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setAccessType('paid')}
+                                        className={`flex-1 sm:flex-none px-10 py-2.5 rounded-xl text-sm font-black transition-all duration-300 ${accessType === 'paid'
+                                                ? 'bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] text-primary scale-100'
+                                                : 'text-muted-foreground/60 hover:text-foreground hover:bg-background/40 scale-95'
+                                            }`}
+                                    >
+                                        PAID
+                                    </button>
+                                </div>
+                                <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[0.2em] px-1">
+                                    {accessType === 'free' ? '🔓 Accessible to everyone' : '💎 Requires active subscription'}
+                                </p>
                             </div>
                         </CardContent>
                     </Card>
