@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { BlogEditor } from "@/components/editor/blog-editor";
+import { LogoutButton } from '@/components/logout-button';
 
 export default async function ProtectedPage() {
   const supabase = await createClient()
@@ -14,6 +15,7 @@ export default async function ProtectedPage() {
   return (
     <main className="min-h-screen bg-muted/30">
       <BlogEditor />
+      {/* <LogoutButton/> */}
     </main>
   );
 }
