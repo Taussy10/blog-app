@@ -14,16 +14,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { OutputData } from "@editorjs/editorjs";
 import { toast } from "sonner";
 import { Loader2, Save, Eye, ChevronLeft } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 // have to use client cause editor.js is client side lib
 import { createClient } from "@/lib/supabase/client";
 export function BlogEditor() {
     const [title, setTitle] = useState("");
-    const [data, setData] = useState<OutputData | undefined>(undefined);
+    // storing the data of editor
+    const [blogContent, setBlogContent] = useState<OutputData | undefined>(undefined);
     const [isSaving, setIsSaving] = useState(false);
     const [isPreview, setIsPreview] = useState(false);
     const [blogId, setBlogId] = useState<string | null>(null);
     const [accessType, setAccessType] = useState<"free" | "paid">("free");
+    const queryClient = useQueryClient();
 
     const supabase = createClient();
     const knowUser = async () => {
@@ -32,7 +35,7 @@ export function BlogEditor() {
     }
     const handleSave = async () => {
         if (!title) { toast.error("Please enter a title"); return; }
-        if (!data || data.blocks.length === 0) { toast.error("Content empty"); return; }
+        if (!blogContent || blogContent.blocks.length === 0) { toast.error("Content empty"); return; }
 
         setIsSaving(true);
         try {
@@ -49,7 +52,7 @@ export function BlogEditor() {
                 .upsert({
                     blog_id: blogId || undefined, // Use blog_id as the primary key name
                     title: title,
-                    content: data,
+                    content: blogContent,
                     user_id: user.id,
                     access_type: accessType,
                 })
@@ -65,6 +68,7 @@ export function BlogEditor() {
             // Update state with the saved blog ID so next save is an update
             if (blog) {
                 setBlogId(blog.blog_id); // Use blog_id from the returned data
+                queryClient.invalidateQueries({ queryKey: ['blogs'] });
                 console.log("Blog saved/updated successfully:", blog);
                 toast.success(blogId ? "Blog updated!" : "Blog created!");
             }
@@ -117,7 +121,7 @@ export function BlogEditor() {
                     </header>
 
                     <div className="min-h-[400px]">
-                        <PreviewRenderer data={data} />
+                        <PreviewRenderer data={blogContent} />
                     </div>
 
                     {/* <div className="mt-16 p-8 bg-muted/50 rounded-2xl border-2 border-dashed border-primary/20">
@@ -152,8 +156,8 @@ export function BlogEditor() {
                                         type="button"
                                         onClick={() => setAccessType('free')}
                                         className={`flex-1 sm:flex-none px-10 py-2.5 rounded-xl text-sm font-black transition-all duration-300 ${accessType === 'free'
-                                                ? 'bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] text-primary scale-100'
-                                                : 'text-muted-foreground/60 hover:text-foreground hover:bg-background/40 scale-95'
+                                            ? 'bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] text-primary scale-100'
+                                            : 'text-muted-foreground/60 hover:text-foreground hover:bg-background/40 scale-95'
                                             }`}
                                     >
                                         FREE
@@ -162,8 +166,8 @@ export function BlogEditor() {
                                         type="button"
                                         onClick={() => setAccessType('paid')}
                                         className={`flex-1 sm:flex-none px-10 py-2.5 rounded-xl text-sm font-black transition-all duration-300 ${accessType === 'paid'
-                                                ? 'bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] text-primary scale-100'
-                                                : 'text-muted-foreground/60 hover:text-foreground hover:bg-background/40 scale-95'
+                                            ? 'bg-background shadow-[0_8px_30px_rgb(0,0,0,0.12)] text-primary scale-100'
+                                            : 'text-muted-foreground/60 hover:text-foreground hover:bg-background/40 scale-95'
                                             }`}
                                     >
                                         PAID
@@ -181,8 +185,9 @@ export function BlogEditor() {
                         <div className="relative">
                             <Editor
                                 holder="editorjs-container"
-                                data={data}
-                                onChange={setData}
+                                data={blogContent}
+                                onChange={setBlogContent}
+                                accessType={accessType}
                             />
                         </div>
                     </div>

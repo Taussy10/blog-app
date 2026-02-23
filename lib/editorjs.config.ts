@@ -18,7 +18,7 @@ import { createClient } from "@/lib/supabase/client";
 // It's a control center(from where we can control the editor)
 // so, here we are going to add all the tools we want to use in the editor
 // also funciton if we want to add files in supabase storage
-const EDITOR_CONFIG = {
+const getEditorConfig = (accessType: 'free' | 'paid') => ({
     code: Code,
     header: {
         class: Header,
@@ -47,6 +47,9 @@ const EDITOR_CONFIG = {
     image: {
         class: Image,
         config: {
+            // How does we are storing the Image
+
+            // 1. when you upload images from local device then it will upload to supabase storage
             uploader: {
                 uploadByFile: async (file: File) => {
                     try {
@@ -59,6 +62,9 @@ const EDITOR_CONFIG = {
                             throw new Error("You must be logged in to upload images");
                         }
 
+                        // Use the accessType from the editor settings to decide the bucket
+                        const bucketName = accessType === 'paid' ? 'blog-images-paid' : 'blog-images-free';
+
                         // 2. Construct path: [user_id]/[timestamp]-[filename]
                         // RLS requires the first folder to be the user's ID
                         const fileExt = file.name.split('.').pop();
@@ -66,22 +72,40 @@ const EDITOR_CONFIG = {
                         const fileName = `${Date.now()}.${fileExt}`;
                         const filePath = `${user.id}/${fileName}`;
 
-                        // 3. Upload to 'images' bucket
+                        // 3. Upload to the determined bucket
                         const { data, error: uploadError } = await supabase.storage
-                            .from('images')
+                            .from(bucketName)
                             .upload(filePath, file);
 
                         if (uploadError) throw uploadError;
 
-                        // 4. Get Public URL so Editor.js can display the image
-                        const { data: { publicUrl } } = supabase.storage
-                            .from('images')
-                            .getPublicUrl(filePath);
+                        // 4. Get the correct URL for the editor
+                        let imageUrl = "";
+                        if (bucketName === "blog-images-paid") {
+                            // If it's a private bucket, use our secure proxy API
+                            // so, this link we are gonna store it in our database
+                            // this data nees two things: API key and base URL 
+                            // whenever will request browser will create give base URL:  http://localhost:3000/
+                            // btw in production base URL will be your domain:
+                            // API key we can get it from cookies whenever we will request this 
+                            // API route(then server will give the  JWT from cookies) 
+
+                            // here is how it will look like: http://localhost:3000/api/storage/proxy?bucket=blog-images-paid&path=7edf2bc0-9adb-4fc8-9a2b-efd375692da4%2F1771866076029.png
+                            // We will use server creating link
+
+                            imageUrl = `/api/storage/proxy?bucket=${bucketName}&path=${encodeURIComponent(filePath)}`;
+                        } else {
+                            // If it's public, just get the standard public URL
+                            const { data: { publicUrl } } = supabase.storage
+                                .from(bucketName)
+                                .getPublicUrl(filePath);
+                            imageUrl = publicUrl;
+                        }
 
                         return {
                             success: 1,
                             file: {
-                                url: publicUrl,
+                                url: imageUrl,
                             }
                         };
 
@@ -109,7 +133,7 @@ const EDITOR_CONFIG = {
         class: Quote,
         inlineToolbar: true,
     },
-}
+})
 
-export { EDITOR_CONFIG }
+export { getEditorConfig }
 

@@ -3,15 +3,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import type EditorJS from "@editorjs/editorjs";
 import type { OutputData } from "@editorjs/editorjs";
-import { EDITOR_CONFIG } from "../../lib/editorjs.config";
+import { getEditorConfig } from "../../lib/editorjs.config";
 
 interface EditorProps {
   data?: OutputData;
   onChange?: (data: OutputData) => void;
   holder: string;
+  accessType: "free" | "paid";
 }
+// This component is used to render the editor in the editor component -> by getting data from blog-editor.tsx
 
-const Editor: React.FC<EditorProps> = ({ data, onChange, holder }) => {
+const Editor: React.FC<EditorProps> = ({ data, onChange, holder, accessType }) => {
   const editorInstance = useRef<EditorJS | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -28,7 +30,7 @@ const Editor: React.FC<EditorProps> = ({ data, onChange, holder }) => {
       if (!editorInstance.current) {
         const editor = new EditorJS({
           holder: holder,
-          tools: EDITOR_CONFIG as any,
+          tools: getEditorConfig(accessType) as any,
           placeholder: 'Start writing your amazing story...',
           data: data,
           async onChange(api) {
@@ -54,7 +56,7 @@ const Editor: React.FC<EditorProps> = ({ data, onChange, holder }) => {
         editorInstance.current = null;
       }
     };
-  }, [isMounted, holder]); // Added holder to dependencies
+  }, [isMounted, holder, accessType]); // Added accessType to dependencies
 
   if (!isMounted) return null;
 

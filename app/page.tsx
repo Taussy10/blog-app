@@ -8,7 +8,7 @@ const Page = () => {
   return (
     <div>
       <Button variant={"tausif"} onClick={() => router.push('/login')}>
-     <h1>Login</h1>
+        Login
       </Button>
     </div>
   )
