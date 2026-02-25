@@ -15,7 +15,7 @@ export default async function ProtectedPage() {
   if (error || !data?.user) {
     redirect('/login')
   }
-console.log("user :",data);
+// console.log("user :",data);
 
   return (
     <main className="min-h-screen bg-muted/30 pb-20">
