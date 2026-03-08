@@ -133,6 +133,7 @@ const getEditorConfig = (accessType: 'free' | 'paid') => ({
         class: Quote,
         inlineToolbar: true,
     },
+    
 })
 
 export { getEditorConfig }
